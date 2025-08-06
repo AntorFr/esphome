@@ -1,9 +1,12 @@
 from esphome import automation
 from esphome.automation import Condition
 import esphome.codegen as cg
+from esphome.components.const import CONF_USE_PSRAM
 from esphome.components.esp32 import add_idf_sdkconfig_option, const, get_esp32_variant
 from esphome.components.network import IPAddress
+from esphome.config_helpers import filter_source_files_from_platform
 import esphome.config_validation as cv
+from esphome.config_validation import only_with_esp_idf
 from esphome.const import (
     CONF_AP,
     CONF_BSSID,
@@ -27,6 +30,7 @@ from esphome.const import (
     CONF_NETWORKS,
     CONF_ON_CONNECT,
     CONF_ON_DISCONNECT,
+    CONF_ON_ERROR,
     CONF_PASSWORD,
     CONF_POWER_SAVE_MODE,
     CONF_PRIORITY,
@@ -34,9 +38,11 @@ from esphome.const import (
     CONF_SSID,
     CONF_STATIC_IP,
     CONF_SUBNET,
+    CONF_TIMEOUT,
     CONF_TTLS_PHASE_2,
     CONF_USE_ADDRESS,
     CONF_USERNAME,
+    PlatformFramework,
 )
 from esphome.core import CORE, HexInt, coroutine_with_priority
 import esphome.final_validate as fv
@@ -46,6 +52,7 @@ from . import wpa2_eap
 AUTO_LOAD = ["network"]
 
 NO_WIFI_VARIANTS = [const.VARIANT_ESP32H2]
+CONF_SAVE = "save"
 
 wifi_ns = cg.esphome_ns.namespace("wifi")
 EAPAuth = wifi_ns.struct("EAPAuth")
@@ -63,6 +70,9 @@ WiFiConnectedCondition = wifi_ns.class_("WiFiConnectedCondition", Condition)
 WiFiEnabledCondition = wifi_ns.class_("WiFiEnabledCondition", Condition)
 WiFiEnableAction = wifi_ns.class_("WiFiEnableAction", automation.Action)
 WiFiDisableAction = wifi_ns.class_("WiFiDisableAction", automation.Action)
+WiFiConfigureAction = wifi_ns.class_(
+    "WiFiConfigureAction", automation.Action, cg.Component
+)
 
 
 def validate_password(value):
@@ -87,16 +97,16 @@ def validate_channel(value):
 
 AP_MANUAL_IP_SCHEMA = cv.Schema(
     {
-        cv.Required(CONF_STATIC_IP): cv.ipv4,
-        cv.Required(CONF_GATEWAY): cv.ipv4,
-        cv.Required(CONF_SUBNET): cv.ipv4,
+        cv.Required(CONF_STATIC_IP): cv.ipv4address,
+        cv.Required(CONF_GATEWAY): cv.ipv4address,
+        cv.Required(CONF_SUBNET): cv.ipv4address,
     }
 )
 
 STA_MANUAL_IP_SCHEMA = AP_MANUAL_IP_SCHEMA.extend(
     {
-        cv.Optional(CONF_DNS1, default="0.0.0.0"): cv.ipv4,
-        cv.Optional(CONF_DNS2, default="0.0.0.0"): cv.ipv4,
+        cv.Optional(CONF_DNS1, default="0.0.0.0"): cv.ipv4address,
+        cv.Optional(CONF_DNS2, default="0.0.0.0"): cv.ipv4address,
     }
 )
 
@@ -255,8 +265,6 @@ def _validate(config):
         networks = config.get(CONF_NETWORKS, [])
         if not networks:
             raise cv.Invalid("At least one network required for fast_connect!")
-        if len(networks) != 1:
-            raise cv.Invalid("Fast connect can only be used with one network!")
 
     if CONF_USE_ADDRESS not in config:
         use_address = CORE.name + config[CONF_DOMAIN]
@@ -303,6 +311,7 @@ CONFIG_SCHEMA = cv.All(
                 rp2040="light",
                 bk72xx="none",
                 rtl87xx="none",
+                ln882x="light",
             ): cv.enum(WIFI_POWER_SAVE_MODES, upper=True),
             cv.Optional(CONF_FAST_CONNECT, default=False): cv.boolean,
             cv.Optional(CONF_USE_ADDRESS): cv.string_strict,
@@ -324,6 +333,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_ON_CONNECT): automation.validate_automation(single=True),
             cv.Optional(CONF_ON_DISCONNECT): automation.validate_automation(
                 single=True
+            ),
+            cv.Optional(CONF_USE_PSRAM): cv.All(
+                only_with_esp_idf, cv.requires_component("psram"), cv.boolean
             ),
         }
     ),
@@ -358,7 +370,7 @@ def eap_auth(config):
 def safe_ip(ip):
     if ip is None:
         return IPAddress(0, 0, 0, 0)
-    return IPAddress(*ip.args)
+    return IPAddress(str(ip))
 
 
 def manual_ip(config):
@@ -433,9 +445,7 @@ async def to_code(config):
 
     if CORE.is_esp8266:
         cg.add_library("ESP8266WiFi", None)
-    elif CORE.is_esp32 and CORE.using_arduino:
-        cg.add_library("WiFi", None)
-    elif CORE.is_rp2040:
+    elif (CORE.is_esp32 and CORE.using_arduino) or CORE.is_rp2040:
         cg.add_library("WiFi", None)
 
     if CORE.is_esp32 and CORE.using_esp_idf:
@@ -447,6 +457,8 @@ async def to_code(config):
         if config[CONF_ENABLE_RRM]:
             cg.add(var.set_rrm(config[CONF_ENABLE_RRM]))
 
+    if config.get(CONF_USE_PSRAM):
+        add_idf_sdkconfig_option("CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP", True)
     cg.add_define("USE_WIFI")
 
     # must register before OTA safe mode check
@@ -483,3 +495,54 @@ async def wifi_enable_to_code(config, action_id, template_arg, args):
 @automation.register_action("wifi.disable", WiFiDisableAction, cv.Schema({}))
 async def wifi_disable_to_code(config, action_id, template_arg, args):
     return cg.new_Pvariable(action_id, template_arg)
+
+
+@automation.register_action(
+    "wifi.configure",
+    WiFiConfigureAction,
+    cv.Schema(
+        {
+            cv.Required(CONF_SSID): cv.templatable(cv.ssid),
+            cv.Required(CONF_PASSWORD): cv.templatable(validate_password),
+            cv.Optional(CONF_SAVE, default=True): cv.templatable(cv.boolean),
+            cv.Optional(CONF_TIMEOUT, default="30000ms"): cv.templatable(
+                cv.positive_time_period_milliseconds
+            ),
+            cv.Optional(CONF_ON_CONNECT): automation.validate_automation(single=True),
+            cv.Optional(CONF_ON_ERROR): automation.validate_automation(single=True),
+        }
+    ),
+)
+async def wifi_set_sta_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    ssid = await cg.templatable(config[CONF_SSID], args, cg.std_string)
+    password = await cg.templatable(config[CONF_PASSWORD], args, cg.std_string)
+    save = await cg.templatable(config[CONF_SAVE], args, cg.bool_)
+    timeout = await cg.templatable(config.get(CONF_TIMEOUT), args, cg.uint32)
+    cg.add(var.set_ssid(ssid))
+    cg.add(var.set_password(password))
+    cg.add(var.set_save(save))
+    cg.add(var.set_connection_timeout(timeout))
+    if on_connect_config := config.get(CONF_ON_CONNECT):
+        await automation.build_automation(
+            var.get_connect_trigger(), [], on_connect_config
+        )
+    if on_error_config := config.get(CONF_ON_ERROR):
+        await automation.build_automation(var.get_error_trigger(), [], on_error_config)
+    await cg.register_component(var, config)
+    return var
+
+
+FILTER_SOURCE_FILES = filter_source_files_from_platform(
+    {
+        "wifi_component_esp32_arduino.cpp": {PlatformFramework.ESP32_ARDUINO},
+        "wifi_component_esp_idf.cpp": {PlatformFramework.ESP32_IDF},
+        "wifi_component_esp8266.cpp": {PlatformFramework.ESP8266_ARDUINO},
+        "wifi_component_libretiny.cpp": {
+            PlatformFramework.BK72XX_ARDUINO,
+            PlatformFramework.RTL87XX_ARDUINO,
+            PlatformFramework.LN882X_ARDUINO,
+        },
+        "wifi_component_pico_w.cpp": {PlatformFramework.RP2040_ARDUINO},
+    }
+)

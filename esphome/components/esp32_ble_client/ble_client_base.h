@@ -21,28 +21,34 @@ namespace esp32_ble_client {
 
 namespace espbt = esphome::esp32_ble_tracker;
 
+static const int UNSET_CONN_ID = 0xFFFF;
+
 class BLEClientBase : public espbt::ESPBTClient, public Component {
  public:
   void setup() override;
   void loop() override;
   float get_setup_priority() const override;
+  void dump_config() override;
 
   void run_later(std::function<void()> &&f);  // NOLINT
+#ifdef USE_ESP32_BLE_DEVICE
   bool parse_device(const espbt::ESPBTDevice &device) override;
+#endif
   void on_scan_end() override {}
   bool gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                            esp_ble_gattc_cb_param_t *param) override;
   void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) override;
   void connect() override;
   esp_err_t pair();
-  void disconnect();
+  void disconnect() override;
+  void unconditional_disconnect();
   void release_services();
 
   bool connected() { return this->state_ == espbt::ClientState::ESTABLISHED; }
 
   void set_auto_connect(bool auto_connect) { this->auto_connect_ = auto_connect; }
 
-  void set_address(uint64_t address) {
+  virtual void set_address(uint64_t address) {
     this->address_ = address;
     this->remote_bda_[0] = (address >> 40) & 0xFF;
     this->remote_bda_[1] = (address >> 32) & 0xFF;
@@ -60,7 +66,7 @@ class BLEClientBase : public espbt::ESPBTClient, public Component {
                        (uint8_t) (this->address_ >> 0) & 0xff);
     }
   }
-  std::string address_str() const { return this->address_str_; }
+  const std::string &address_str() const { return this->address_str_; }
 
   BLEService *get_service(espbt::ESPBTUUID uuid);
   BLEService *get_service(uint16_t uuid);
@@ -89,22 +95,39 @@ class BLEClientBase : public espbt::ESPBTClient, public Component {
 
   bool check_addr(esp_bd_addr_t &addr) { return memcmp(addr, this->remote_bda_, sizeof(esp_bd_addr_t)) == 0; }
 
+  void set_state(espbt::ClientState st) override;
+
  protected:
-  int gattc_if_;
-  esp_bd_addr_t remote_bda_;
-  esp_ble_addr_type_t remote_addr_type_{BLE_ADDR_TYPE_PUBLIC};
-  uint16_t conn_id_{0xFFFF};
+  // Memory optimized layout for 32-bit systems
+  // Group 1: 8-byte types
   uint64_t address_{0};
-  bool auto_connect_{false};
+
+  // Group 2: Container types (grouped for memory optimization)
   std::string address_str_{};
-  uint8_t connection_index_;
-  int16_t service_count_{0};
-  uint16_t mtu_{23};
-  bool paired_{false};
-  espbt::ConnectionType connection_type_{espbt::ConnectionType::V1};
   std::vector<BLEService *> services_;
 
+  // Group 3: 4-byte types
+  int gattc_if_;
+  esp_gatt_status_t status_{ESP_GATT_OK};
+
+  // Group 4: Arrays (6 bytes)
+  esp_bd_addr_t remote_bda_;
+
+  // Group 5: 2-byte types
+  uint16_t conn_id_{UNSET_CONN_ID};
+  uint16_t mtu_{23};
+
+  // Group 6: 1-byte types and small enums
+  esp_ble_addr_type_t remote_addr_type_{BLE_ADDR_TYPE_PUBLIC};
+  espbt::ConnectionType connection_type_{espbt::ConnectionType::V1};
+  uint8_t connection_index_;
+  uint8_t service_count_{0};  // ESP32 has max handles < 255, typical devices have < 50 services
+  bool auto_connect_{false};
+  bool paired_{false};
+  // 6 bytes used, 2 bytes padding
+
   void log_event_(const char *name);
+  void restore_medium_conn_params_();
 };
 
 }  // namespace esp32_ble_client
