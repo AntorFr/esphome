@@ -151,6 +151,12 @@ void ComponentIterator::advance() {
       break;
 #endif
 
+#ifdef USE_WATER_HEATER
+    case IteratorState::WATER_HEATER:
+      this->process_platform_item_(App.get_water_heaters(), &ComponentIterator::on_water_heater);
+      break;
+#endif
+
 #ifdef USE_MEDIA_PLAYER
     case IteratorState::MEDIA_PLAYER:
       this->process_platform_item_(App.get_media_players(), &ComponentIterator::on_media_player);

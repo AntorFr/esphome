@@ -48,6 +48,7 @@ service APIConnection {
   rpc time_command (TimeCommandRequest) returns (void) {}
   rpc update_command (UpdateCommandRequest) returns (void) {}
   rpc valve_command (ValveCommandRequest) returns (void) {}
+  rpc water_heater_command (WaterHeaterCommandRequest) returns (void) {}
 
   rpc subscribe_bluetooth_le_advertisements(SubscribeBluetoothLEAdvertisementsRequest) returns (void) {}
   rpc bluetooth_device_request(BluetoothDeviceRequest) returns (void) {}
@@ -2336,6 +2337,72 @@ message UpdateCommandRequest {
   fixed32 key = 1;
   UpdateCommand command = 2;
   uint32 device_id = 3 [(field_ifdef) = "USE_DEVICES"];
+}
+
+// ==================== WATER HEATER ====================
+
+enum WaterHeaterMode {
+  WATER_HEATER_MODE_OFF = 0;
+  WATER_HEATER_MODE_ECO = 1;
+  WATER_HEATER_MODE_ELECTRIC = 2;
+  WATER_HEATER_MODE_PERFORMANCE = 3;
+  WATER_HEATER_MODE_HIGH_DEMAND = 4;
+  WATER_HEATER_MODE_HEAT_PUMP = 5;
+  WATER_HEATER_MODE_GAS = 6;
+}
+
+message ListEntitiesWaterHeaterResponse {
+  option (id) = 130;
+  option (base_class) = "InfoResponseProtoMessage";
+  option (source) = SOURCE_SERVER;
+  option (ifdef) = "USE_WATER_HEATER";
+
+  string object_id = 1;
+  fixed32 key = 2;
+  string name = 3;
+  reserved 4; // Deprecated: was string unique_id
+
+  bool supports_current_temperature = 5;
+  repeated WaterHeaterMode supported_modes = 6 [(container_pointer_no_template) = "water_heater::WaterHeaterModeMask"];
+  float visual_min_temperature = 7;
+  float visual_max_temperature = 8;
+  float visual_target_temperature_step = 9;
+  bool supports_away = 10;
+  bool disabled_by_default = 11;
+  string icon = 12 [(field_ifdef) = "USE_ENTITY_ICON"];
+  EntityCategory entity_category = 13;
+  uint32 device_id = 14 [(field_ifdef) = "USE_DEVICES"];
+}
+
+message WaterHeaterStateResponse {
+  option (id) = 131;
+  option (base_class) = "StateResponseProtoMessage";
+  option (source) = SOURCE_SERVER;
+  option (ifdef) = "USE_WATER_HEATER";
+  option (no_delay) = true;
+
+  fixed32 key = 1;
+  WaterHeaterMode mode = 2;
+  float current_temperature = 3;
+  float target_temperature = 4;
+  bool away = 5;
+  uint32 device_id = 6 [(field_ifdef) = "USE_DEVICES"];
+}
+
+message WaterHeaterCommandRequest {
+  option (id) = 132;
+  option (source) = SOURCE_CLIENT;
+  option (ifdef) = "USE_WATER_HEATER";
+  option (no_delay) = true;
+  option (base_class) = "CommandProtoMessage";
+
+  fixed32 key = 1;
+  bool has_mode = 2;
+  WaterHeaterMode mode = 3;
+  bool has_target_temperature = 4;
+  float target_temperature = 5;
+  bool has_away = 6;
+  bool away = 7;
 }
 
 // ==================== Z-WAVE ====================

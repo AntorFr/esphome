@@ -78,6 +78,9 @@ class ComponentIterator {
 #ifdef USE_VALVE
   virtual bool on_valve(valve::Valve *valve) = 0;
 #endif
+#ifdef USE_WATER_HEATER
+  virtual bool on_water_heater(water_heater::WaterHeater *water_heater) = 0;
+#endif
 #ifdef USE_MEDIA_PLAYER
   virtual bool on_media_player(media_player::MediaPlayer *media_player);
 #endif
@@ -154,6 +157,9 @@ class ComponentIterator {
 #endif
 #ifdef USE_VALVE
     VALVE,
+#endif
+#ifdef USE_WATER_HEATER
+    WATER_HEATER,
 #endif
 #ifdef USE_MEDIA_PLAYER
     MEDIA_PLAYER,

@@ -52,6 +52,9 @@
 #ifdef USE_VALVE
 #include "esphome/components/valve/valve.h"
 #endif
+#ifdef USE_WATER_HEATER
+#include "esphome/components/water_heater/water_heater.h"
+#endif
 #ifdef USE_MEDIA_PLAYER
 #include "esphome/components/media_player/media_player.h"
 #endif
@@ -116,6 +119,9 @@ class Controller {
 #endif
 #ifdef USE_VALVE
   virtual void on_valve_update(valve::Valve *obj){};
+#endif
+#ifdef USE_WATER_HEATER
+  virtual void on_water_heater_update(water_heater::WaterHeater *obj){};
 #endif
 #ifdef USE_MEDIA_PLAYER
   virtual void on_media_player_update(media_player::MediaPlayer *obj){};
