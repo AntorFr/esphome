@@ -1,0 +1,28 @@
+sensor:
+  - platform: template
+    id: water_temperature_sensor
+    lambda: |-
+      return 45.0;
+    update_interval: 60s
+
+water_heater:
+  - platform: template
+    id: water_heater_test
+    name: Test Water Heater
+    optimistic: true
+    visual:
+      min_temperature: 30
+      max_temperature: 70
+      temperature_step: 1
+    set_mode_action:
+      - logger.log:
+          format: "Mode set to: %d"
+          args: ["(int)mode"]
+    set_target_temperature_action:
+      - logger.log:
+          format: "Target temperature set to: %.1f"
+          args: ["target_temperature"]
+    set_away_action:
+      - logger.log:
+          format: "Away set to: %d"
+          args: ["(int)away"]

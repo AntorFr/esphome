@@ -10,6 +10,11 @@
 #include "esphome/components/climate/climate_traits.h"
 #endif
 
+#ifdef USE_WATER_HEATER
+#include "esphome/components/water_heater/water_heater_mode.h"
+#include "esphome/components/water_heater/water_heater_traits.h"
+#endif
+
 #ifdef USE_LIGHT
 #include "esphome/components/light/light_traits.h"
 #endif

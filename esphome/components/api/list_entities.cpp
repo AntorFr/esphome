@@ -42,6 +42,9 @@ LIST_ENTITIES_HANDLER(lock, lock::Lock, ListEntitiesLockResponse)
 #ifdef USE_VALVE
 LIST_ENTITIES_HANDLER(valve, valve::Valve, ListEntitiesValveResponse)
 #endif
+#ifdef USE_WATER_HEATER
+LIST_ENTITIES_HANDLER(water_heater, water_heater::WaterHeater, ListEntitiesWaterHeaterResponse)
+#endif
 #ifdef USE_CAMERA
 LIST_ENTITIES_HANDLER(camera, camera::Camera, ListEntitiesCameraResponse)
 #endif

@@ -283,6 +283,17 @@ enum UpdateCommand : uint32_t {
   UPDATE_COMMAND_CHECK = 2,
 };
 #endif
+#ifdef USE_WATER_HEATER
+enum WaterHeaterMode : uint32_t {
+  WATER_HEATER_MODE_OFF = 0,
+  WATER_HEATER_MODE_ECO = 1,
+  WATER_HEATER_MODE_ELECTRIC = 2,
+  WATER_HEATER_MODE_PERFORMANCE = 3,
+  WATER_HEATER_MODE_HIGH_DEMAND = 4,
+  WATER_HEATER_MODE_HEAT_PUMP = 5,
+  WATER_HEATER_MODE_GAS = 6,
+};
+#endif
 #ifdef USE_ZWAVE_PROXY
 enum ZWaveProxyRequestType : uint32_t {
   ZWAVE_PROXY_REQUEST_TYPE_SUBSCRIBE = 0,
@@ -329,9 +340,6 @@ class CommandProtoMessage : public ProtoDecodableMessage {
  public:
   ~CommandProtoMessage() override = default;
   uint32_t key{0};
-#ifdef USE_DEVICES
-  uint32_t device_id{0};
-#endif
 
  protected:
 };
@@ -711,6 +719,9 @@ class CoverCommandRequest final : public CommandProtoMessage {
   bool has_tilt{false};
   float tilt{0.0f};
   bool stop{false};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -779,6 +790,9 @@ class FanCommandRequest final : public CommandProtoMessage {
   int32_t speed_level{0};
   bool has_preset_mode{false};
   std::string preset_mode{};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -871,6 +885,9 @@ class LightCommandRequest final : public CommandProtoMessage {
   bool has_effect{false};
   const uint8_t *effect{nullptr};
   uint16_t effect_len{0};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -965,6 +982,9 @@ class SwitchCommandRequest final : public CommandProtoMessage {
   const char *message_name() const override { return "switch_command_request"; }
 #endif
   bool state{false};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1499,6 +1519,9 @@ class ClimateCommandRequest final : public CommandProtoMessage {
   std::string custom_preset{};
   bool has_target_humidity{false};
   float target_humidity{0.0f};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1558,6 +1581,9 @@ class NumberCommandRequest final : public CommandProtoMessage {
   const char *message_name() const override { return "number_command_request"; }
 #endif
   float state{0.0f};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1611,6 +1637,9 @@ class SelectCommandRequest final : public CommandProtoMessage {
 #endif
   const uint8_t *state{nullptr};
   uint16_t state_len{0};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1671,6 +1700,9 @@ class SirenCommandRequest final : public CommandProtoMessage {
   uint32_t duration{0};
   bool has_volume{false};
   float volume{0.0f};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1728,6 +1760,9 @@ class LockCommandRequest final : public CommandProtoMessage {
   enums::LockCommand command{};
   bool has_code{false};
   std::string code{};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -1762,6 +1797,9 @@ class ButtonCommandRequest final : public CommandProtoMessage {
   static constexpr uint8_t ESTIMATED_SIZE = 9;
 #ifdef HAS_PROTO_MESSAGE_DUMP
   const char *message_name() const override { return "button_command_request"; }
+#endif
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
 #endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
@@ -1840,6 +1878,9 @@ class MediaPlayerCommandRequest final : public CommandProtoMessage {
   std::string media_url{};
   bool has_announcement{false};
   bool announcement{false};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2645,6 +2686,9 @@ class AlarmControlPanelCommandRequest final : public CommandProtoMessage {
 #endif
   enums::AlarmControlPanelStateCommand command{};
   std::string code{};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2702,6 +2746,9 @@ class TextCommandRequest final : public CommandProtoMessage {
   const char *message_name() const override { return "text_command_request"; }
 #endif
   std::string state{};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2757,6 +2804,9 @@ class DateCommandRequest final : public CommandProtoMessage {
   uint32_t year{0};
   uint32_t month{0};
   uint32_t day{0};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2811,6 +2861,9 @@ class TimeCommandRequest final : public CommandProtoMessage {
   uint32_t hour{0};
   uint32_t minute{0};
   uint32_t second{0};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2905,6 +2958,9 @@ class ValveCommandRequest final : public CommandProtoMessage {
   bool has_position{false};
   float position{0.0f};
   bool stop{false};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -2955,6 +3011,9 @@ class DateTimeCommandRequest final : public CommandProtoMessage {
   const char *message_name() const override { return "date_time_command_request"; }
 #endif
   uint32_t epoch_seconds{0};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif
@@ -3019,6 +3078,72 @@ class UpdateCommandRequest final : public CommandProtoMessage {
   const char *message_name() const override { return "update_command_request"; }
 #endif
   enums::UpdateCommand command{};
+#ifdef USE_DEVICES
+  uint32_t device_id{0};
+#endif
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  void dump_to(std::string &out) const override;
+#endif
+
+ protected:
+  bool decode_32bit(uint32_t field_id, Proto32Bit value) override;
+  bool decode_varint(uint32_t field_id, ProtoVarInt value) override;
+};
+#endif
+#ifdef USE_WATER_HEATER
+class ListEntitiesWaterHeaterResponse final : public InfoResponseProtoMessage {
+ public:
+  static constexpr uint8_t MESSAGE_TYPE = 130;
+  static constexpr uint8_t ESTIMATED_SIZE = 63;
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  const char *message_name() const override { return "list_entities_water_heater_response"; }
+#endif
+  bool supports_current_temperature{false};
+  const water_heater::WaterHeaterModeMask *supported_modes{};
+  float visual_min_temperature{0.0f};
+  float visual_max_temperature{0.0f};
+  float visual_target_temperature_step{0.0f};
+  bool supports_away{false};
+  void encode(ProtoWriteBuffer buffer) const override;
+  void calculate_size(ProtoSize &size) const override;
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  void dump_to(std::string &out) const override;
+#endif
+
+ protected:
+};
+class WaterHeaterStateResponse final : public StateResponseProtoMessage {
+ public:
+  static constexpr uint8_t MESSAGE_TYPE = 131;
+  static constexpr uint8_t ESTIMATED_SIZE = 23;
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  const char *message_name() const override { return "water_heater_state_response"; }
+#endif
+  enums::WaterHeaterMode mode{};
+  float current_temperature{0.0f};
+  float target_temperature{0.0f};
+  bool away{false};
+  void encode(ProtoWriteBuffer buffer) const override;
+  void calculate_size(ProtoSize &size) const override;
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  void dump_to(std::string &out) const override;
+#endif
+
+ protected:
+};
+class WaterHeaterCommandRequest final : public CommandProtoMessage {
+ public:
+  static constexpr uint8_t MESSAGE_TYPE = 132;
+  static constexpr uint8_t ESTIMATED_SIZE = 20;
+#ifdef HAS_PROTO_MESSAGE_DUMP
+  const char *message_name() const override { return "water_heater_command_request"; }
+#endif
+  bool has_mode{false};
+  enums::WaterHeaterMode mode{};
+  bool has_target_temperature{false};
+  float target_temperature{0.0f};
+  bool has_away{false};
+  bool away{false};
 #ifdef HAS_PROTO_MESSAGE_DUMP
   void dump_to(std::string &out) const override;
 #endif

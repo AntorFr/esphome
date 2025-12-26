@@ -54,6 +54,9 @@ INITIAL_STATE_HANDLER(lock, lock::Lock)
 #ifdef USE_VALVE
 INITIAL_STATE_HANDLER(valve, valve::Valve)
 #endif
+#ifdef USE_WATER_HEATER
+INITIAL_STATE_HANDLER(water_heater, water_heater::WaterHeater)
+#endif
 #ifdef USE_MEDIA_PLAYER
 INITIAL_STATE_HANDLER(media_player, media_player::MediaPlayer)
 #endif

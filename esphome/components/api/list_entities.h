@@ -76,6 +76,9 @@ class ListEntitiesIterator : public ComponentIterator {
 #ifdef USE_VALVE
   bool on_valve(valve::Valve *entity) override;
 #endif
+#ifdef USE_WATER_HEATER
+  bool on_water_heater(water_heater::WaterHeater *entity) override;
+#endif
 #ifdef USE_MEDIA_PLAYER
   bool on_media_player(media_player::MediaPlayer *entity) override;
 #endif

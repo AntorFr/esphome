@@ -77,6 +77,9 @@
 #ifdef USE_VALVE
 #include "esphome/components/valve/valve.h"
 #endif
+#ifdef USE_WATER_HEATER
+#include "esphome/components/water_heater/water_heater.h"
+#endif
 #ifdef USE_MEDIA_PLAYER
 #include "esphome/components/media_player/media_player.h"
 #endif
@@ -202,6 +205,10 @@ class Application {
 
 #ifdef USE_VALVE
   void register_valve(valve::Valve *valve) { this->valves_.push_back(valve); }
+#endif
+
+#ifdef USE_WATER_HEATER
+  void register_water_heater(water_heater::WaterHeater *water_heater) { this->water_heaters_.push_back(water_heater); }
 #endif
 
 #ifdef USE_MEDIA_PLAYER
@@ -403,6 +410,10 @@ class Application {
   auto &get_valves() const { return this->valves_; }
   GET_ENTITY_METHOD(valve::Valve, valve, valves)
 #endif
+#ifdef USE_WATER_HEATER
+  auto &get_water_heaters() const { return this->water_heaters_; }
+  GET_ENTITY_METHOD(water_heater::WaterHeater, water_heater, water_heaters)
+#endif
 #ifdef USE_MEDIA_PLAYER
   auto &get_media_players() const { return this->media_players_; }
   GET_ENTITY_METHOD(media_player::MediaPlayer, media_player, media_players)
@@ -603,6 +614,9 @@ class Application {
 #endif
 #ifdef USE_VALVE
   StaticVector<valve::Valve *, ESPHOME_ENTITY_VALVE_COUNT> valves_{};
+#endif
+#ifdef USE_WATER_HEATER
+  StaticVector<water_heater::WaterHeater *, ESPHOME_ENTITY_WATER_HEATER_COUNT> water_heaters_{};
 #endif
 #ifdef USE_MEDIA_PLAYER
   StaticVector<media_player::MediaPlayer *, ESPHOME_ENTITY_MEDIA_PLAYER_COUNT> media_players_{};

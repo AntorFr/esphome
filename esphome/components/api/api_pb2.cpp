@@ -3198,6 +3198,107 @@ bool UpdateCommandRequest::decode_32bit(uint32_t field_id, Proto32Bit value) {
   return true;
 }
 #endif
+#ifdef USE_WATER_HEATER
+void ListEntitiesWaterHeaterResponse::encode(ProtoWriteBuffer buffer) const {
+  buffer.encode_string(1, this->object_id_ref_);
+  buffer.encode_fixed32(2, this->key);
+  buffer.encode_string(3, this->name_ref_);
+  buffer.encode_bool(5, this->supports_current_temperature);
+  for (const auto &it : *this->supported_modes) {
+    buffer.encode_uint32(6, static_cast<uint32_t>(it), true);
+  }
+  buffer.encode_float(7, this->visual_min_temperature);
+  buffer.encode_float(8, this->visual_max_temperature);
+  buffer.encode_float(9, this->visual_target_temperature_step);
+  buffer.encode_bool(10, this->supports_away);
+  buffer.encode_bool(11, this->disabled_by_default);
+#ifdef USE_ENTITY_ICON
+  buffer.encode_string(12, this->icon_ref_);
+#endif
+  buffer.encode_uint32(13, static_cast<uint32_t>(this->entity_category));
+#ifdef USE_DEVICES
+  buffer.encode_uint32(14, this->device_id);
+#endif
+}
+void ListEntitiesWaterHeaterResponse::calculate_size(ProtoSize &size) const {
+  size.add_length(1, this->object_id_ref_.size());
+  size.add_fixed32(1, this->key);
+  size.add_length(1, this->name_ref_.size());
+  size.add_bool(1, this->supports_current_temperature);
+  if (!this->supported_modes->empty()) {
+    for (const auto &it : *this->supported_modes) {
+      size.add_uint32_force(1, static_cast<uint32_t>(it));
+    }
+  }
+  size.add_float(1, this->visual_min_temperature);
+  size.add_float(1, this->visual_max_temperature);
+  size.add_float(1, this->visual_target_temperature_step);
+  size.add_bool(1, this->supports_away);
+  size.add_bool(1, this->disabled_by_default);
+#ifdef USE_ENTITY_ICON
+  size.add_length(1, this->icon_ref_.size());
+#endif
+  size.add_uint32(1, static_cast<uint32_t>(this->entity_category));
+#ifdef USE_DEVICES
+  size.add_uint32(1, this->device_id);
+#endif
+}
+void WaterHeaterStateResponse::encode(ProtoWriteBuffer buffer) const {
+  buffer.encode_fixed32(1, this->key);
+  buffer.encode_uint32(2, static_cast<uint32_t>(this->mode));
+  buffer.encode_float(3, this->current_temperature);
+  buffer.encode_float(4, this->target_temperature);
+  buffer.encode_bool(5, this->away);
+#ifdef USE_DEVICES
+  buffer.encode_uint32(6, this->device_id);
+#endif
+}
+void WaterHeaterStateResponse::calculate_size(ProtoSize &size) const {
+  size.add_fixed32(1, this->key);
+  size.add_uint32(1, static_cast<uint32_t>(this->mode));
+  size.add_float(1, this->current_temperature);
+  size.add_float(1, this->target_temperature);
+  size.add_bool(1, this->away);
+#ifdef USE_DEVICES
+  size.add_uint32(1, this->device_id);
+#endif
+}
+bool WaterHeaterCommandRequest::decode_varint(uint32_t field_id, ProtoVarInt value) {
+  switch (field_id) {
+    case 2:
+      this->has_mode = value.as_bool();
+      break;
+    case 3:
+      this->mode = static_cast<enums::WaterHeaterMode>(value.as_uint32());
+      break;
+    case 4:
+      this->has_target_temperature = value.as_bool();
+      break;
+    case 6:
+      this->has_away = value.as_bool();
+      break;
+    case 7:
+      this->away = value.as_bool();
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
+bool WaterHeaterCommandRequest::decode_32bit(uint32_t field_id, Proto32Bit value) {
+  switch (field_id) {
+    case 1:
+      this->key = value.as_fixed32();
+      break;
+    case 5:
+      this->target_temperature = value.as_float();
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
+#endif
 #ifdef USE_ZWAVE_PROXY
 bool ZWaveProxyFrame::decode_length(uint32_t field_id, ProtoLengthDelimited value) {
   switch (field_id) {
