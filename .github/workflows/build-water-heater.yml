@@ -61,8 +61,7 @@ jobs:
           build-args: |
             BUILD_TYPE=docker
             BUILD_VERSION=water_heater
-            BUILD_OS=alpine
-            BUILD_BASE_VERSION=2025.12.1
+            BUILD_OS=debian
 
   create-manifest:
     name: Create multi-arch manifest
