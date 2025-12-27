@@ -5,9 +5,36 @@ FROM ghcr.io/esphome/esphome:2025.12.1
 COPY esphome/components/water_heater /esphome/esphome/components/water_heater
 COPY esphome/components/template/water_heater /esphome/esphome/components/template/water_heater
 
-# Mettre à jour CODEOWNERS
+# Copier les modifications de l'API pour water_heater
+COPY esphome/components/api/api.proto /esphome/esphome/components/api/api.proto
+COPY esphome/components/api/api_connection.cpp /esphome/esphome/components/api/api_connection.cpp
+COPY esphome/components/api/api_connection.h /esphome/esphome/components/api/api_connection.h
+COPY esphome/components/api/api_pb2.cpp /esphome/esphome/components/api/api_pb2.cpp
+COPY esphome/components/api/api_pb2.h /esphome/esphome/components/api/api_pb2.h
+COPY esphome/components/api/api_pb2_dump.cpp /esphome/esphome/components/api/api_pb2_dump.cpp
+COPY esphome/components/api/api_pb2_includes.h /esphome/esphome/components/api/api_pb2_includes.h
+COPY esphome/components/api/api_pb2_service.cpp /esphome/esphome/components/api/api_pb2_service.cpp
+COPY esphome/components/api/api_pb2_service.h /esphome/esphome/components/api/api_pb2_service.h
+COPY esphome/components/api/list_entities.cpp /esphome/esphome/components/api/list_entities.cpp
+COPY esphome/components/api/list_entities.h /esphome/esphome/components/api/list_entities.h
+COPY esphome/components/api/subscribe_state.cpp /esphome/esphome/components/api/subscribe_state.cpp
+COPY esphome/components/api/subscribe_state.h /esphome/esphome/components/api/subscribe_state.h
+
+# Copier les modifications du core
+COPY esphome/core/application.h /esphome/esphome/core/application.h
+COPY esphome/core/component_iterator.cpp /esphome/esphome/core/component_iterator.cpp
+COPY esphome/core/component_iterator.h /esphome/esphome/core/component_iterator.h
+COPY esphome/core/controller.h /esphome/esphome/core/controller.h
+COPY esphome/core/defines.h /esphome/esphome/core/defines.h
+
+# Copier les constantes Python
+COPY esphome/const.py /esphome/esphome/const.py
+
+# Mettre à jour CODEOWNERS et Doxyfile
 COPY CODEOWNERS /esphome/CODEOWNERS
+COPY Doxyfile /esphome/Doxyfile
 
 # Vérifier que les fichiers sont bien copiés
 RUN ls -la /esphome/esphome/components/water_heater && \
-    ls -la /esphome/esphome/components/template/water_heater
+    ls -la /esphome/esphome/components/template/water_heater && \
+    ls -la /esphome/esphome/components/api/api_pb2.h
