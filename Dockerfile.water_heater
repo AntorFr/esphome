@@ -1,0 +1,13 @@
+# Dockerfile pour ajouter le support water_heater à l'image ESPHome officielle
+FROM ghcr.io/esphome/esphome:2025.12.1
+
+# Copier les composants water_heater
+COPY esphome/components/water_heater /esphome/esphome/components/water_heater
+COPY esphome/components/template/water_heater /esphome/esphome/components/template/water_heater
+
+# Mettre à jour CODEOWNERS
+COPY CODEOWNERS /esphome/CODEOWNERS
+
+# Vérifier que les fichiers sont bien copiés
+RUN ls -la /esphome/esphome/components/water_heater && \
+    ls -la /esphome/esphome/components/template/water_heater

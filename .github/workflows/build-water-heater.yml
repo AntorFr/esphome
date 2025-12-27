@@ -50,18 +50,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/Dockerfile
-          target: final
+          file: ./Dockerfile.water_heater
           platforms: ${{ matrix.platform.arch == 'amd64' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:water_heater-${{ matrix.platform.arch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_TYPE=docker
-            BUILD_VERSION=water_heater
-            BUILD_OS=debian
 
   create-manifest:
     name: Create multi-arch manifest
